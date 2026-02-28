@@ -10,11 +10,16 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+          - name: Checkout code
+            uses: actions/checkout@v4
 
-      - name: Build Docker image
-        run: docker build -t esp32-pio-builder .
+          - name: Build Docker image
+            run: docker build -t esp32-pio-builder .
 
-      - name: Compile and flash to ESP32 in container
-        run: docker run --rm --device=/dev/ttyUSB0 esp32-pio-builder
+          - name: Compile and flash to ESP32 in container
+            run: |
+              docker run --rm \
+                --device=/dev/ttyUSB0 \
+                -v ${{ github.workspace }}:/workspace \
+                -v /home/grzeniux/pio_cache:/root/.platformio \
+                esp32-pio-builder

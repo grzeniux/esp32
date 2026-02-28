@@ -5,6 +5,4 @@ RUN pip install -U platformio
 
 WORKDIR /workspace
 
-COPY . .
-
 CMD ["pio", "run", "-t", "upload"]
