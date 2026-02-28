@@ -1,0 +1,23 @@
+name: Deploy to ESP32
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-flash:
+    runs-on: self-hosted
+    defaults:
+      run:
+        working-directory: ./ESP32
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t esp32-pio-builder .
+
+      - name: Compile and flash to ESP32 in container
+        run: docker run --rm --device=/dev/ttyUSB0 esp32-pio-builder
