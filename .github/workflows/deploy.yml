@@ -7,13 +7,13 @@ on:
 
 jobs:
   build:
-    # Use GitHub-hosted runner for high-speed compilation
+    # Run heavy compilation on GitHub's fast servers
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Cache PlatformIO core and libraries to speed up the build process
+      # Cache PlatformIO files to speed up subsequent builds
       - name: Cache PlatformIO
         uses: actions/cache@v4
         with:
@@ -28,11 +28,11 @@ jobs:
       - name: Install PlatformIO
         run: pip install --upgrade platformio
 
-      # Compile the project and generate firmware.bin
+      # Build the project to generate firmware.bin
       - name: Compile Firmware
         run: pio run
 
-      # Save the compiled binary as an artifact to pass it to the local runner
+      # Upload the binary to GitHub's cloud storage
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -41,26 +41,26 @@ jobs:
           if-no-files-found: error
 
   deploy:
-    # Use your Raspberry Pi (self-hosted) for physical hardware access
+    # Use your Raspberry Pi for physical hardware access
     runs-on: self-hosted
     needs: build
     steps:
-      # Retrieve the firmware compiled in the cloud
+      # Download the binary compiled in the cloud
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
           name: esp32-firmware
           path: ./build
 
-      # Build the minimalist flashing container locally
+      # Build the local flash tool image (only on changes)
       - name: Build Flash Tool
         run: docker build -t esp32-flash-tool .
 
-      # Flash the firmware to ESP32 using the containerized esptool
+      # Flash the firmware using the containerized esptool.py
       - name: Flash Firmware
         run: |
           docker run --rm \
             --device=/dev/ttyUSB0 \
-            -v $(pwd)/build:/flash \
+            -v ${{ github.workspace }}/build:/flash \
             esp32-flash-tool \
             esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash 0x10000 /flash/*/firmware.bin
