@@ -63,7 +63,4 @@ jobs:
             --device=/dev/ttyUSB0 \
             -v $(pwd)/build:/flash \
             esp32-flash-tool \
-            --chip esp32 \
-            --port /dev/ttyUSB0 \
-            --baud 460800 \
-            write_flash 0x10000 /flash/*/firmware.bin
+            esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash 0x10000 /flash/*/firmware.bin
