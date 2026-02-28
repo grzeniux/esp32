@@ -1,18 +1,28 @@
 #include <Arduino.h>
 
-// put function declarations here:
-int myFunction(int, int);
+#define LED_PIN 2
+
+
+//// --- OPTION 1:
+const int delayTime = 300;
+const String uartMessage = "Version 1: LED blinks every 300ms";
+
+//// --- OPTION 2:
+// const int delayTime = 1000;
+// const String uartMessage = "Version 2: LED blinks every 1000ms";
+
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  Serial.println("Starting ESP32...");
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  digitalWrite(LED_PIN, HIGH);
+  Serial.println(uartMessage);
+  delay(delayTime);
+  
+  digitalWrite(LED_PIN, LOW);
+  delay(delayTime);
 }
