@@ -45,16 +45,13 @@ jobs:
           name: esp32-firmware
           path: ./build
 
-      # Build without cache to force the updated Dockerfile [cite: 2026-02-11]
       - name: Build Flash Tool
-        run: docker build --no-cache -t esp32-flash-tool:${{ github.sha }} .
+        run: docker build -t esp32-flash-tool:${{ github.sha }} .
 
-      # Explicitly override the entrypoint to ensure pio is not called [cite: 2026-02-11]
       - name: Flash Firmware
         run: |
           docker run --rm \
             --device=/dev/ttyUSB0 \
-            --entrypoint "" \
             -v ${{ github.workspace }}/build:/flash \
             esp32-flash-tool:${{ github.sha }} \
             esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash 0x10000 /flash/*/firmware.bin
