@@ -53,11 +53,9 @@ jobs:
         run: |
           docker run --rm \
             --device=/dev/ttyUSB0 \
-            --entrypoint "" \
             -v ${{ github.workspace }}/build:/flash \
             esp32-flasher-fast:${{ github.sha }} \
-            esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash 0x10000 /flash/*/firmware.bin
-
+            sh -c "esptool --chip esp32 --port /dev/ttyUSB0 --baud 460800 write-flash 0x10000 /flash/*/firmware.bin"
       - name: Cleanup
         if: always()
         run: docker rmi esp32-flasher-fast:${{ github.sha }}
