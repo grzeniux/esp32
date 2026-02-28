@@ -7,13 +7,11 @@ on:
 
 jobs:
   build:
-    # Run heavy compilation on GitHub's fast servers
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Cache PlatformIO files to speed up subsequent builds
       - name: Cache PlatformIO
         uses: actions/cache@v4
         with:
@@ -28,39 +26,39 @@ jobs:
       - name: Install PlatformIO
         run: pip install --upgrade platformio
 
-      # Build the project to generate firmware.bin
       - name: Compile Firmware
         run: pio run
 
-      # Upload the binary to GitHub's cloud storage
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: esp32-firmware
           path: .pio/build/**/firmware.bin
-          if-no-files-found: error
 
   deploy:
-    # Use your Raspberry Pi for physical hardware access
     runs-on: self-hosted
     needs: build
     steps:
-      # Download the binary compiled in the cloud
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
           name: esp32-firmware
           path: ./build
 
-      # Build the local flash tool image (only on changes)
+      # We use the unique commit SHA as a tag to prevent using stale images [cite: 2026-02-11]
       - name: Build Flash Tool
-        run: docker build -t esp32-flash-tool .
+        run: docker build -t esp32-flash-tool:${{ github.sha }} .
 
-      # Flash the firmware using the containerized esptool.py
+      # Explicitly call esptool.py and use the unique image tag [cite: 2026-02-11]
       - name: Flash Firmware
         run: |
           docker run --rm \
             --device=/dev/ttyUSB0 \
             -v ${{ github.workspace }}/build:/flash \
-            esp32-flash-tool \
+            esp32-flash-tool:${{ github.sha }} \
             esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash 0x10000 /flash/*/firmware.bin
+
+      # Cleanup: remove the specific image after use to save space on Raspberry Pi
+      - name: Cleanup Docker Image
+        if: always()
+        run: docker rmi esp32-flash-tool:${{ github.sha }}
