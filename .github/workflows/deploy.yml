@@ -39,26 +39,25 @@ jobs:
     runs-on: self-hosted
     needs: build
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
         with:
-          python-version: '3.11'
+          name: esp32-firmware
+          path: ./build
 
-      - name: Install PlatformIO
-        run: pip install --upgrade platformio
+      - name: Build Flash Tool
+        # Using a new name to bypass any local cache issues [cite: 2026-02-11]
+        run: docker build --no-cache -t esp32-flasher-fast:${{ github.sha }} .
 
-      - name: Upload to ESP32
-        env:
-          UPLOAD_PORT: ${{ vars.ESP32_UPLOAD_PORT }}
-        shell: bash
+      - name: Flash Firmware
         run: |
-          PORT="${UPLOAD_PORT:-/dev/ttyUSB0}"
-          echo "Using upload port: $PORT"
-          if [ -n "$PORT" ]; then
-            pio run -e esp32doit-devkit-v1 -t upload --upload-port "$PORT"
-          else
-            pio run -e esp32doit-devkit-v1 -t upload
-          fi
+          docker run --rm \
+            --device=/dev/ttyUSB0 \
+            --entrypoint "" \
+            -v ${{ github.workspace }}/build:/flash \
+            esp32-flasher-fast:${{ github.sha }} \
+            esptool.py --chip esp32 --port /dev/ttyUSB0 --baud 460800 write_flash 0x10000 /flash/*/firmware.bin
+
+      - name: Cleanup
+        if: always()
+        run: docker rmi esp32-flasher-fast:${{ github.sha }}
