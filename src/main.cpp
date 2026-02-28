@@ -4,12 +4,12 @@
 
 
 //// --- OPTION 1:
-// const int delayTime = 300;
-// const String uartMessage = "Version 1: LED blinks every 300ms";
+const int delayTime = 300;
+const String uartMessage = "Version 1: LED blinks every 300ms";
 
 //// --- OPTION 2:
-const int delayTime = 1000;
-const String uartMessage = "Version 2: LED blinks every 1000ms";
+// const int delayTime = 1000;
+// const String uartMessage = "Version 2: LED blinks every 1000ms";
 
 
 void setup() {
